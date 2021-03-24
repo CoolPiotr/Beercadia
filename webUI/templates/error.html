@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>{% block title %}{% endblock %}</title>
+	<link rel="stylesheet" href="{{ url_for('static', filename='error.css') }}" />
+</head>
+<body>
+<header>
+{% block header %}
+	<h1>Arrgh!</h1>
+	<h3>Something went wrong.<h3>
+	<h4>{{estring.split(":")[0]}}</h4>
+{% endblock %}
+</header>
+<p><p>
+<section class="content">
+{% block content %}
+	<div class="error detail">{{":".join( estring.split(":")[1:] )}}</div>
+	<div class="error trace">
+		<div class="badfile">{{traceback[2]}}</div>
+		<div class="badfunc">{{traceback[4]}}</div>
+		<div class="badcode"><span class="number">{{traceback[3]}}</span> <span class="line">|</span> <span class="code">{{traceback[1]}}</span></div>
+		<div class="exception"><span class="name">{{traceback[0].split(":")[0]}}</span> {{":".join( traceback[0].split(":")[1:] )}}</div>
+{% endblock %}
+</section>
+</body>

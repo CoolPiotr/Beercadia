@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>{% block title %}{% endblock %}</title>
+	<link rel="stylesheet" href="{{ url_for('static', filename='beercadia.css') }}" />
+	<script src="https://kit.fontawesome.com/cfb94ed7c3.js" crossorigin="anonymous"></script>
+</head>
+<body>
+{% block menu %}{% endblock %}
+<header>
+{% block header %}{% endblock %}
+</header>
+
+<section class="content">
+  {% for message in get_flashed_messages() %}
+    <div class="flash">{{ message }}</div>
+  {% endfor %}
+  {% block content %}{% endblock %}
+</section>
+</body>
