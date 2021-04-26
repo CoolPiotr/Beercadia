@@ -45,9 +45,10 @@ class HardwareScanner():
         self.sleep = sleep
         self.db = db if db else HardwareScanner.DATABASE
         self.validateDB()
-        self.mosquitto_client = mqtt.Client("hardwarescanner")
+        self.mosquitto_client = mqtt.Client("hardwarescanner", False)
     
     def scan(self):
+        self.mosquitto_client.connect(HardwareScanner.MOSQUITTO_BROKER, HardwareScanner.MOSQUITTO_PORT)
         while True:
             #humidity, temperature = self.DHT_reader(Adafruit_DHT.DHT22, 4)
             humidity, temperature = self.getChamberTemperature()
@@ -68,7 +69,7 @@ class HardwareScanner():
     
     def publish(self, items):
         for key, val in items:
-            self.mosquitto_client.publish(key, val)
+            self.mosquitto_client.publish(key, val, retain=True)
         return
         
     def updateDB(self, items):
