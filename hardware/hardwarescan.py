@@ -4,6 +4,7 @@ Created on Apr. 25, 2021
 @author: Pete Harris
 '''
 
+import logging
 import time
 import sqlite3
 import paho.mqtt.client as mqtt
@@ -31,7 +32,7 @@ class HardwareScanner():
         RightKeg/                       # The keg on the right.
             Weight/                     # Weight of the right keg sensor, in kilograms.
             Temperature                 #
-            Name/
+            Name/                       #
         Gas/                            # Gas cannister info. Could be made into left/right if we put two on the machine.
             Weight/                     # Weight of the gas cannister, in kilograms.
     
@@ -42,32 +43,44 @@ class HardwareScanner():
     CORE_LOOP_SLEEP = 2
     
     @staticmethod
-    def on_publish(client, userdata, mid):
-        print("Published:", client, userdata, mid)
+    def mqtt_on_publish(client, userdata, messageid):
+        pass
+        #print("Published:", client, userdata, messageid)
+    
+    @staticmethod
+    def mqtt_on_disconnect(client, userdata, returncode):
+        logging.warning(f"MQTT client disconnected [code {returncode}]; attempting to reconnect...")
+        while client.disconnected:
+            client.connect(HardwareScanner.MOSQUITTO_BROKER, HardwareScanner.MOSQUITTO_PORT)
     
     
-    def __init__(self, thermosleep=30, db=None):
+    def __init__(self, thermosleep=600, thermoretry=15, db=None):
         self.thermosleep = thermosleep
+        self.thermo_retry = thermoretry
         self.db = db if db else HardwareScanner.DATABASE
         self.validateDB()
         self.mosquitto_client = mqtt.Client("Beercadia_hardware_scanner")
-        self.mosquitto_client.on_publish = HardwareScanner.on_publish
+        self.mosquitto_client.on_publish = HardwareScanner.mqtt_on_publish
+        self.mosquitto_client.on_disconnect = HardwareScanner.mqtt_on_disconnect
         
         self.hardware = {
-            "Chamber/Thermometer": { "sleep": self.thermosleep }
+            "Chamber/Thermometer": { "sleep": 0 }
         }
-        self.chamber_thermo = self.thermosleep
+    
     
     def scan(self):
         self.mosquitto_client.connect(HardwareScanner.MOSQUITTO_BROKER, HardwareScanner.MOSQUITTO_PORT)
         while True:
-            self.hardware["Chamber/Thermometer"]["sleep"] =- 1
+            self.hardware["Chamber/Thermometer"]["sleep"] -= 1
+            if self.hardware["Chamber/Thermometer"]["sleep"] < (-1 - self.thermo_retry):
+                logging.warning(f"Warning: Failed to read thermometer {self.thermo_retry} times in a row.")
+                self.hardware["Chamber/Thermometer"]["sleep"] = -1
             if self.hardware["Chamber/Thermometer"]["sleep"] < 0:
                 humidity, temperature = self.getChamberTemperature()
                 if humidity is not None and temperature is not None:
-                    print(f"Chamber: Temperature: {temperature:0.1f}°C, Humidity: {humidity:0.1f}%")
+                    logging.info(f"Chamber: Temperature: {temperature:0.1f}°C, Humidity: {humidity:0.1f}%")
                     self.update( [("Beercadia/Chamber/Temperature", temperature), ("Beercadia/Chamber/Humidity", humidity)] )
-                    self.hardware["Chamber/Thermometer"]["sleep"] = self.thermosleep
+                    self.hardware["Chamber/Thermometer"]["sleep"] = int(self.thermosleep / HardwareScanner.CORE_LOOP_SLEEP)
             
             time.sleep(HardwareScanner.CORE_LOOP_SLEEP)
         # end scan
@@ -83,7 +96,7 @@ class HardwareScanner():
     def publish(self, items):
         for key, val in items:
             self.mosquitto_client.publish(key, val, retain=True)
-            #print("Published ", key, val)
+            logging.info(f"{key} = {val}")
         return
         
     def updateDB(self, items):
@@ -119,5 +132,10 @@ class HardwareScanner():
 
 
 if __name__ == '__main__':
-    obj = HardwareScanner()
+    logging.basicConfig(
+        filename="hardwarescan.log", encoding="utf-8",
+        format="%{asctime)s:%(levelname)s: %(message)s",
+        datefmt="%Y/%m/%d %H:%M:%S",
+        level=logging.INFO)
+    obj = HardwareScanner(thermosleep=60)
     obj.scan()
