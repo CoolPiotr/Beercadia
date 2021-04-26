@@ -39,25 +39,37 @@ class HardwareScanner():
     DATABASE = "../Beercadia.db"
     MOSQUITTO_BROKER = "127.0.0.1"
     MOSQUITTO_PORT = 1883   # default
+    CORE_LOOP_SLEEP = 2
+    
+    @staticmethod
+    def on_publish(client, userdata, mid):
+        print("Published:", client, userdata, mid)
     
     
-    def __init__(self, sleep=5, db=None):
-        self.sleep = sleep
+    def __init__(self, thermosleep=30, db=None):
+        self.thermosleep = thermosleep
         self.db = db if db else HardwareScanner.DATABASE
         self.validateDB()
-        self.mosquitto_client = mqtt.Client("hardwarescanner")
-        self.mosquitto_client.on_publish = on_publish
+        self.mosquitto_client = mqtt.Client("Beercadia_hardware_scanner")
+        self.mosquitto_client.on_publish = HardwareScanner.on_publish
+        
+        self.hardware = {
+            "Chamber/Thermometer": { "sleep": self.thermosleep }
+        }
+        self.chamber_thermo = self.thermosleep
     
     def scan(self):
         self.mosquitto_client.connect(HardwareScanner.MOSQUITTO_BROKER, HardwareScanner.MOSQUITTO_PORT)
         while True:
-            #humidity, temperature = self.DHT_reader(Adafruit_DHT.DHT22, 4)
-            humidity, temperature = self.getChamberTemperature()
-            if humidity is not None and temperature is not None:
-                print(f"Temperature: {temperature:0.1f}°C, Humidity: {humidity:0.1f}%")
-                self.update( [("Beercadia/Chamber/Humidity", humidity), ("Beercadia/Chamber/Temperature", temperature)] )
+            self.hardware["Chamber/Thermometer"]["sleep"] =- 1
+            if self.hardware["Chamber/Thermometer"]["sleep"] < 0:
+                humidity, temperature = self.getChamberTemperature()
+                if humidity is not None and temperature is not None:
+                    print(f"Chamber: Temperature: {temperature:0.1f}°C, Humidity: {humidity:0.1f}%")
+                    self.update( [("Beercadia/Chamber/Temperature", temperature), ("Beercadia/Chamber/Humidity", humidity)] )
+                    self.hardware["Chamber/Thermometer"]["sleep"] = self.thermosleep
             
-            time.sleep(self.sleep)
+            time.sleep(HardwareScanner.CORE_LOOP_SLEEP)
         # end scan
     
     def update(self, items):
@@ -105,8 +117,6 @@ class HardwareScanner():
         #return 0.65, 22.1 
 
 
-def on_publish(client, userdata, mid):
-	print("Published:", client, userdata, mid)
 
 if __name__ == '__main__':
     obj = HardwareScanner()
