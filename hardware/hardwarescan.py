@@ -54,7 +54,7 @@ class HardwareScanner():
             client.connect(HardwareScanner.MOSQUITTO_BROKER, HardwareScanner.MOSQUITTO_PORT)
     
     
-    def __init__(self, thermosleep=600, thermoretry=15, db=None):
+    def __init__(self, thermosleep=30, thermoretry=15, db=None):
         self.thermosleep = thermosleep
         self.thermo_retry = thermoretry
         self.db = db if db else HardwareScanner.DATABASE
@@ -66,7 +66,6 @@ class HardwareScanner():
         self.hardware = {
             "Chamber/Thermometer": { "sleep": 0 }
         }
-    
     
     def scan(self):
         self.mosquitto_client.connect(HardwareScanner.MOSQUITTO_BROKER, HardwareScanner.MOSQUITTO_PORT)
@@ -80,7 +79,7 @@ class HardwareScanner():
                 if humidity is not None and temperature is not None:
                     logging.info(f"Chamber: Temperature: {temperature:0.1f}°C, Humidity: {humidity:0.1f}%")
                     self.update( [("Beercadia/Chamber/Temperature", temperature), ("Beercadia/Chamber/Humidity", humidity)] )
-                    self.hardware["Chamber/Thermometer"]["sleep"] = int(self.thermosleep / HardwareScanner.CORE_LOOP_SLEEP)
+                    self.hardware["Chamber/Thermometer"]["sleep"] = int( self.thermosleep / HardwareScanner.CORE_LOOP_SLEEP )
             
             time.sleep(HardwareScanner.CORE_LOOP_SLEEP)
         # end scan
