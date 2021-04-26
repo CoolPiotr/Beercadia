@@ -7,12 +7,12 @@ Created on Apr. 25, 2021
 import time
 import sqlite3
 import paho.mqtt.client as mqtt
-#import Adafruit_DHT
+import Adafruit_DHT
 
 class HardwareScanner():
     """
-    DHT_SENSOR_CHAMBER = Adafruit_DHT.DHT22
-    DHT_PIN_CHAMBER = 4
+    DHT_SENSOR_CHAMBER = Adafruit_DHT.AM2302
+    DHT_PIN_CHAMBER = 7
     
     Database keys should also be the same as Mosquitto message URLs; i.e. slash delimited.
     This is the list of categories:
@@ -50,8 +50,10 @@ class HardwareScanner():
     def scan(self):
         while True:
             #humidity, temperature = self.DHT_reader(Adafruit_DHT.DHT22, 4)
-            humidity, temperature = self.DHT_reader(None, None)
-            self.update( [("Beercadia/Chamber/Humidity", humidity), ("Beercadia/Chamber/Temperature", temperature)] )
+            humidity, temperature = self.getChamberTemperature()
+            if humidity is not None and temperature is not None:
+                print(f"Temperature: {temperature:0.1f}°C, Humidity: {humidity:0.1f}%")
+                self.update( [("Beercadia/Chamber/Humidity", humidity), ("Beercadia/Chamber/Temperature", temperature)] )
             
             time.sleep(self.sleep)
         # end scan
@@ -86,13 +88,18 @@ class HardwareScanner():
         conn.close()
         return
     
-    def DHT_reader(self, sensor, pin):
+    def getChamberTemperature(self):
+        """
+        """
+        return self._DHT_reader(Adafruit_DHT.DHT22, 4)
+    
+    def _DHT_reader(self, sensor, pin):
         """
         Returns humidity, temperature
         """
-        #return Adafruit_DHT.read_retry(sensor, pin)
+        return Adafruit_DHT.read(sensor, pin)
         # return fake sample values until tested from Raspberry Pi
-        return 0.65, 22.1 
+        #return 0.65, 22.1 
 
 
 if __name__ == '__main__':
