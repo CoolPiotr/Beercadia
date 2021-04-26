@@ -11,8 +11,8 @@ import Adafruit_DHT
 
 class HardwareScanner():
     """
-    DHT_SENSOR_CHAMBER = Adafruit_DHT.AM2302
-    DHT_PIN_CHAMBER = 7
+    DHT_SENSOR_CHAMBER = Adafruit_DHT.DHT22
+    DHT_PIN_CHAMBER = 4
     
     Database keys should also be the same as Mosquitto message URLs; i.e. slash delimited.
     This is the list of categories:
@@ -45,7 +45,8 @@ class HardwareScanner():
         self.sleep = sleep
         self.db = db if db else HardwareScanner.DATABASE
         self.validateDB()
-        self.mosquitto_client = mqtt.Client("hardwarescanner", False)
+        self.mosquitto_client = mqtt.Client("hardwarescanner")
+        self.mosquitto_client.on_publish = on_publish
     
     def scan(self):
         self.mosquitto_client.connect(HardwareScanner.MOSQUITTO_BROKER, HardwareScanner.MOSQUITTO_PORT)
@@ -70,6 +71,7 @@ class HardwareScanner():
     def publish(self, items):
         for key, val in items:
             self.mosquitto_client.publish(key, val, retain=True)
+            #print("Published ", key, val)
         return
         
     def updateDB(self, items):
@@ -102,6 +104,9 @@ class HardwareScanner():
         # return fake sample values until tested from Raspberry Pi
         #return 0.65, 22.1 
 
+
+def on_publish(client, userdata, mid):
+	print("Published:", client, userdata, mid)
 
 if __name__ == '__main__':
     obj = HardwareScanner()
