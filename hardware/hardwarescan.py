@@ -42,32 +42,42 @@ class HardwareScanner():
     CORE_LOOP_SLEEP = 2
     
     @staticmethod
-    def on_publish(client, userdata, mid):
-        print("Published:", client, userdata, mid)
+    def mqtt_on_publish(client, userdata, mid):
+        pass
+        #print("Published:", client, userdata, mid)
+
+    def mqtt_on_disconnect(client, userdata, returncode):
+        print(f"MQTT client disconnected [code {returncode}]; attempting to reconnect...")
+        while client.disconnected:
+            client.connect(HardwareScanner.MOSQUITTO_BROKER, HardwareScanner.MOSQUITTO_PORT)
     
     
-    def __init__(self, thermosleep=30, db=None):
+    def __init__(self, thermosleep=30, thermoretry=15, db=None):
         self.thermosleep = thermosleep
+        self.thermo_retry = thermoretry
         self.db = db if db else HardwareScanner.DATABASE
         self.validateDB()
         self.mosquitto_client = mqtt.Client("Beercadia_hardware_scanner")
-        self.mosquitto_client.on_publish = HardwareScanner.on_publish
+        self.mosquitto_client.on_publish = HardwareScanner.mqtt_on_publish
+        self.mosquitto_client.on_disconnect = HardwareScanner.mqtt_on_disconnect
         
         self.hardware = {
-            "Chamber/Thermometer": { "sleep": self.thermosleep }
+            "Chamber/Thermometer": { "sleep": 0 }
         }
-        self.chamber_thermo = self.thermosleep
     
     def scan(self):
         self.mosquitto_client.connect(HardwareScanner.MOSQUITTO_BROKER, HardwareScanner.MOSQUITTO_PORT)
         while True:
-            self.hardware["Chamber/Thermometer"]["sleep"] =- 1
+            self.hardware["Chamber/Thermometer"]["sleep"] -= 1
+            if self.hardware["Chamber/Thermometer"]["sleep"] < (-1 - self.thermo_retry):
+                print(f"Warning: Failed to read thermometer {self.thermo_retry} times in a row.")
+                self.hardware["Chamber/Thermometer"]["sleep"] = -1
             if self.hardware["Chamber/Thermometer"]["sleep"] < 0:
                 humidity, temperature = self.getChamberTemperature()
                 if humidity is not None and temperature is not None:
                     print(f"Chamber: Temperature: {temperature:0.1f}°C, Humidity: {humidity:0.1f}%")
                     self.update( [("Beercadia/Chamber/Temperature", temperature), ("Beercadia/Chamber/Humidity", humidity)] )
-                    self.hardware["Chamber/Thermometer"]["sleep"] = self.thermosleep
+                    self.hardware["Chamber/Thermometer"]["sleep"] = int( self.thermosleep / HardwareScanner.CORE_LOOP_SLEEP )
             
             time.sleep(HardwareScanner.CORE_LOOP_SLEEP)
         # end scan
@@ -83,7 +93,7 @@ class HardwareScanner():
     def publish(self, items):
         for key, val in items:
             self.mosquitto_client.publish(key, val, retain=True)
-            #print("Published ", key, val)
+            print(key, val)
         return
         
     def updateDB(self, items):
