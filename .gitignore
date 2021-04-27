@@ -1,5 +1,6 @@
 # Beercadia specific files
 Beercadia.db
+hardware/hardwarescan.log*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
