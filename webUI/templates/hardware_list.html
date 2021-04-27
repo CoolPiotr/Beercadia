@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}Beercadia{% endblock %}
+
+{% block content %}
+<style>
+	h4 { font-family: Arial, sans-serif; font-size: 28px; line-height: 28px; font-weight: 700; padding:0; margin: 0; }
+	h4 img { margin:0; padding:0; }
+	table { font-family: Arial, sans-serif; font-size: 12pt; }
+	table { border-collapse: collapse; }
+	table td { border: 1px solid black; height: 48px; }
+</style>
+	<h4><img src="{{url_for('static', filename='Beercadia_icon.svg')}}" height="32">Beercadia hardware</h4>
+	<table>
+	{% for key, val in hardware.items() %}
+		<tr><td>{{key}}</td><td>{{val}}</td><td>
+		{%- if "Temperature" in key %}
+		{% with celcius = val, thermoscale = 48 %}{%- include 'svgthermometer.svg' %}{% endwith %}</td>
+		{%- endif %}
+		</td></tr>
+	{% endfor %}
+	</table>
+{% endblock %}

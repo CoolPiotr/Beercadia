@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<svg	xmlns="http://www.w3.org/2000/svg"
+		width="96" height="72" viewBox="18 8 114 80">
+<defs>
+	<linearGradient id="beer" gradientTransform="rotate(102)">
+		<stop offset="9%" stop-color="hsl(250,3%,92%)" />
+		<stop offset="20%" stop-color="hsl(47,98%,55%)" />
+	</linearGradient>
+</defs>
+<g transform="rotate(-12)">
+<path stroke="black" stroke-width="2px" fill="url('#beer')" d="
+M 32 32 h 16 v 16 h 24 v -16 h 16 v 8 h -8 v 8 h 8 v 8 h 8 v 8 h 8 v 16 h -8 v -8 h -8 v 16 h -8 v 8 h -16 v -8 h 8 v -8 h -24 v 8 h 8 v 8
+ h -16 v -8 h -8 v -16 h -8 v 8 h -8 v -16 h 8 v -8 h 8 v -8 h 8 v -8 h -8 z 
+M 40 56 v 8 h 8 v -8 z M 72 56 v 8 h 8 v -8 z
+"/>
+</g>
+</svg>

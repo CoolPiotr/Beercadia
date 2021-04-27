@@ -1,0 +1,73 @@
+{#% set celcius = 12 %#}
+{#% set thermoscale = 512 %#}
+{% set temparc = 180 - celcius * 10 %}
+{% if temparc > 200 %}
+	{% set temparc = 200 %}
+{% endif %}
+{% if temparc < -45 %}
+	{% set temparc = -45 %}
+{% endif %}
+{% set thermoradius = 180 %}
+{% set lowcolor = (240,100,100) %}
+{% set midcolor = (240,100,60) %}
+{% set hicolor = (360,100,60) %}
+
+{% if celcius <= 0 %}
+	{% set thermocolor = "hsl("+str(lowcolor[0])+","+str(lowcolor[1])+"%," +str(lowcolor[2])+"%)" %}
+{% elif celcius < 2 %}
+	{% set thermocolor = "hsl(" + str(lowcolor[0] + (midcolor[0]-lowcolor[0])*((celcius-0)/2)) + "," + str(lowcolor[1] + (midcolor[1]-lowcolor[1])*((celcius-0)/2)) + "%,"+ str(lowcolor[2] + (midcolor[2]-lowcolor[2])*((celcius-0)/2)) + "%)" %}
+{% elif celcius < 15 %}
+	{% set thermocolor = "hsl("+str(midcolor[0])+","+str(midcolor[1])+"%," +str(midcolor[2])+"%)" %}
+{% elif celcius < 17 %}
+	{% set thermocolor = "hsl(" + str(midcolor[0] + (hicolor[0]-midcolor[0])*((celcius-15)/2)) + "," + str(midcolor[1] + (hicolor[1]-midcolor[1])*((celcius-15)/2)) + "%,"+ str(midcolor[2] + (hicolor[2]-midcolor[2])*((celcius-15)/2)) + "%)" %}
+{% else %}
+	{% set thermocolor = "hsl("+str(hicolor[0])+","+str(hicolor[1])+"%," +str(hicolor[2])+"%)" %}
+{% endif %}
+
+{% set co2 = 2.4 %}
+{% set co2max = 5.0 %}
+<!--
+		120° of the circle == 8°C
+	225° = start
+	200° = freezing
+	90° = center; 9°C
+	45° = SVG arc "flip point"
+	0° = ?
+	-30° = mirror of freezing, i.e. 16°C
+	-45° = cap; too hot
+-->
+<!-- A radiusX, radiusY, rotation of ellipse (always 0 for circle), large arc flag (0 for short distance, 1 for long one), sweep flag (0 counterclockwise, 1 clockwise) -->
+<svg width="{{thermoscale}}" height="{{thermoscale}}" viewBox="0 0 1024 1024">
+<defs>
+	<radialGradient id="temperatureBackground">
+		<stop offset="75%" stop-color=hsla(0,100%,100%,1.0) />
+		<stop offset="100%" stop-color=hsla(0,100%,100%,0.0) />
+	</radialGradient>
+</defs>
+<path stroke="hsl(0,0%,0%)" stroke-width="3px" fill="none" d="
+	M {{512+round(500*cos(radians(225)))}} {{512-round(500*sin(radians(225)))}}
+	A 500 500 0 1 1 {{512+round(500*cos(radians(-45)))}} {{512-round(500*sin(radians(-45)))}}
+	L {{512+round((500-thermoradius)*cos(radians(-45)))}} {{512-round((500-thermoradius)*sin(radians(-45)))}}
+	A {{500-thermoradius}} {{500-thermoradius}} 0 1 0 {{512+round((500-thermoradius)*cos(radians(225)))}} {{512-round((500-thermoradius)*sin(radians(225)))}}
+	Z
+"/>
+<path stroke="none" fill="{{thermocolor}}" d="
+	M {{512+round(500*cos(radians(225)))}} {{512-round(500*sin(radians(225)))}}
+	A 500 500 0 {{ 0 if temparc > 45 else 1 }} 1 {{512+round(500*cos(radians(temparc)))}} {{512-round(500*sin(radians(temparc)))}}
+	L {{512+round((500-thermoradius)*cos(radians(temparc)))}} {{512-round((500-thermoradius)*sin(radians(temparc)))}}
+	A {{500-thermoradius}} {{500-thermoradius}} 0 {{ 0 if temparc > 45 else 1 }} 0 {{512+round((500-thermoradius)*cos(radians(225)))}} {{512-round((500-thermoradius)*sin(radians(225)))}}
+	Z
+"/>
+<circle cx="512" cy="512" r="{{500-thermoradius}}" fill="url('#temperatureBackground')"/>
+{% if celcius < 2 %}
+<g transform="translate(215,215) scale(1.5,1.5) ">
+	<path
+		d="M 183.3125,43.09375 L 183.3125,83.8125 L 152.71875,66.125 L 137.1875,92.9375 L 183.3125,119.65625 L 183.3125,179.75 L 131.5,149.8125 L 131.40625,96.28125 L 100.40625,96.34375 L 100.46875,131.90625 L 65.09375,111.46875 L 49.59375,138.3125 L 84.875,158.6875 L 54.25,176.3125 L 69.6875,203.1875 L 115.90625,176.59375 L 167.90625,206.625 L 116.09375,236.53125 L 69.6875,209.84375 L 54.25,236.71875 L 85.0625,254.46875 L 49.6875,274.875 L 65.1875,301.71875 L 100.46875,281.34375 L 100.40625,316.6875 L 131.40625,316.75 L 131.5,263.4375 L 183.5,233.4375 L 183.5,293.25 L 137.1875,320.09375 L 152.71875,346.90625 L 183.5,329.09375 L 183.5,369.9375 L 214.5,369.9375 L 214.5,329.21875 L 245.09375,346.90625 L 260.625,320.09375 L 214.5,293.375 L 214.5,233.28125 L 266.3125,263.21875 L 266.40625,316.75 L 297.40625,316.6875 L 297.34375,281.125 L 332.71875,301.5625 L 348.21875,274.71875 L 312.9375,254.34375 L 343.5625,236.71875 L 328.125,209.84375 L 281.9375,236.4375 L 229.90625,206.40625 L 281.75,176.46875 L 328.125,203.1875 L 343.5625,176.3125 L 312.75,158.5625 L 348.125,138.15625 L 332.625,111.3125 L 297.34375,131.6875 L 297.40625,96.34375 L 266.40625,96.28125 L 266.3125,149.59375 L 214.3125,179.59375 L 214.3125,119.78125 L 260.625,92.9375 L 245.09375,66.125 L 214.3125,83.9375 L 214.3125,43.09375 L 183.3125,43.09375 z"
+		style="fill:hsl(240,100%,80%);fill-opacity:1;stroke:none" />
+</g>
+{% endif %}
+<text x="512" y="{{512+32}}" text-anchor="middle" dominant-baseline="middle" font-family="'Helvetica','Arial',sans-serif" font-weight="bold" font-size="384px" fill="black"
+>{{floor(celcius)}}{% if int(celcius*2) % 2 == 1 %}<tspan font-size="128px" dy="-108px">5</tspan>{% endif %}</text>
+<text x="512" y="928" text-anchor="middle" dominant-baseline="middle" font-family="'Helvetica','Arial',sans-serif" font-weight="bold" font-size="128px" fill="black"
+>C</text>
+</svg> 
