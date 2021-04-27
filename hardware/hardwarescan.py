@@ -72,15 +72,28 @@ class HardwareScanner():
     
     @staticmethod
     def mqtt_on_publish(client, userdata, messageid):
-        pass
-        #print("Published:", client, userdata, messageid)
+        logger.debug("MQTT client published messageID[%s]", messageid)
+    
+    @staticmethod
+    def mqtt_on_connect(client, userdata, flags, returncode):
+        failcodes = {
+            0: "Connection successful",
+            1: "Connection refused - incorrect protocol version",
+            2: 'Connection refused - invalid client identifier',
+            3: "Connection refused - server unavailable",
+            4: "Connection refused - bad username or password",
+            5: "Connection refused - not authorised",
+        }
+        if returncode == 0:
+            logger.debug("MQTT client connected OK.")
+        elif returncode < 6:
+            logger.debug("MQTT client failed: %s.", failcodes[returncode])
+        else:
+            logger.debug("MQTT client failed: unknown code [%s]", returncode)
     
     @staticmethod
     def mqtt_on_disconnect(client, userdata, returncode):
-        logger.warning(f"MQTT client disconnected [code %s]; attempting to reconnect...", returncode)
-        while client.disconnected:
-            client.connect(HardwareScanner.MOSQUITTO_BROKER, HardwareScanner.MOSQUITTO_PORT)
-    
+        logger.debug("MQTT client disconnected [code %s].", returncode)
     
     def __init__(self, thermosleep=360, thermoretry=15, db=None):
         self.thermosleep = thermosleep
@@ -89,28 +102,45 @@ class HardwareScanner():
         self.validateDB()
         self.mosquitto_client = mqtt.Client("Beercadia_hardware_scanner")
         self.mosquitto_client.on_publish = HardwareScanner.mqtt_on_publish
+        self.mosquitto_client.on_connect = HardwareScanner.mqtt_on_connect
         self.mosquitto_client.on_disconnect = HardwareScanner.mqtt_on_disconnect
         
         self.hardware = {
-            "Chamber/Thermometer": { "sleep": 0 }
+            "Chamber/Thermometer": { "sleep": 0, "sensor": Adafruit_DHT.DHT22, "pin": 4 }
         }
     
     def scan(self):
-        self.mosquitto_client.connect(HardwareScanner.MOSQUITTO_BROKER, HardwareScanner.MOSQUITTO_PORT)
         while True:
-            self.hardware["Chamber/Thermometer"]["sleep"] -= 1
-            if self.hardware["Chamber/Thermometer"]["sleep"] < (-1 - self.thermo_retry):
-                logger.warning(f"Warning: Failed to read thermometer %s times in a row.", self.thermo_retry)
-                self.hardware["Chamber/Thermometer"]["sleep"] = -1
-            if self.hardware["Chamber/Thermometer"]["sleep"] < 0:
-                humidity, temperature = self.getChamberTemperature()
-                if humidity is not None and temperature is not None:
-                    logger.info(f"Hardware read: Chamber: Temperature: %.1f°C, Humidity: %.1f%%", temperature, humidity)
-                    self.update( [("Beercadia/Chamber/Temperature", temperature), ("Beercadia/Chamber/Humidity", humidity)] )
-                    self.hardware["Chamber/Thermometer"]["sleep"] = int( self.thermosleep / HardwareScanner.CORE_LOOP_SLEEP )
+            self.hardwareReadInLoop("Chamber/Thermometer")
             
             time.sleep(HardwareScanner.CORE_LOOP_SLEEP)
         # end scan
+    
+    def hardwareReadInLoop(self, hardwarekey):
+        if hardwarekey not in self.hardware:
+            return False
+        
+        myretry = 10
+        mysleep = 30
+        mytype = "???" 
+        if "Thermometer" in hardwarekey:
+            myretry = self.thermo_retry
+            mysleep = self.thermosleep
+            mytype = "thermometer"
+        
+        self.hardware[hardwarekey]["sleep"] -= 1
+        if self.hardware[hardwarekey]["sleep"] < (-1 - myretry):
+            logger.warning("Warning: Failed to read %s %s times in a row.", mytype, myretry)
+            self.hardware[hardwarekey] = -1
+        if self.hardware[hardwarekey]["sleep"] < 0:
+            if mytype == "thermometer":
+                humidity, temperature = self._DHT_reader(self.hardware[hardwarekey]["sensor"], self.hardware[hardwarekey]["pin"])
+                if humidity is not None and temperature is not None:
+                    logger.info(f"Hardware read: %s: Temperature: %.1f°C, Humidity: %.1f%%", hardwarekey, temperature, humidity)
+                    mqttkey = "Beercadia/" + hardwarekey.rpartition("/")[0] + "/"
+                    self.update( [(mqttkey+"Temperature", temperature), (mqttkey+"Humidity", humidity)] )
+                    self.hardware[hardwarekey]["sleep"] = int( mysleep / HardwareScanner.CORE_LOOP_SLEEP )
+        return True
     
     def update(self, items):
         """
@@ -121,9 +151,11 @@ class HardwareScanner():
         return
     
     def publish(self, items):
+        self.mosquitto_client.connect(HardwareScanner.MOSQUITTO_BROKER, HardwareScanner.MOSQUITTO_PORT)
         for key, val in items:
             self.mosquitto_client.publish(key, val, retain=True)
             logger.info(f"%s = %s", key, val)
+        self.mosquitto_client.disconnect()
         return
         
     def updateDB(self, items):
@@ -143,10 +175,6 @@ class HardwareScanner():
         conn.close()
         return
     
-    def getChamberTemperature(self):
-        """
-        """
-        return self._DHT_reader(Adafruit_DHT.DHT22, 4)
     
     def _DHT_reader(self, sensor, pin):
         """
