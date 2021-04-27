@@ -2,9 +2,36 @@
 Created on Apr. 25, 2021
 
 @author: Pete Harris
+
+Designed to be a standalone script that gets implemented as a Linux service.
+
+cd /lib/systemd/system
+sudo nano beercadia-hardware-scan.service
+------------
+[Unit]
+Description=Python script to scan and report values from the hardware
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /home/pi/Beercadia/hardware/hardwarescan.py
+Restart=on-abort
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target
+------------
+sudo chmod 644 /lib/systemd/system/beercadia-hardware-scan.service
+chmod +x /home/pi/Beercadia/hardware/hardwarescan.py
+sudo systemctl daemon-reload
+sudo systemctl enable beercadia-hardware-scan.service
+sudo systemctl start beercadia-hardware-scan.service
+
 '''
 
 import logging
+import logging.handlers
+import os.path
 import time
 import sqlite3
 import paho.mqtt.client as mqtt
@@ -50,7 +77,7 @@ class HardwareScanner():
     
     @staticmethod
     def mqtt_on_disconnect(client, userdata, returncode):
-        logging.warning(f"MQTT client disconnected [code %s]; attempting to reconnect...", returncode)
+        logger.warning(f"MQTT client disconnected [code %s]; attempting to reconnect...", returncode)
         while client.disconnected:
             client.connect(HardwareScanner.MOSQUITTO_BROKER, HardwareScanner.MOSQUITTO_PORT)
     
@@ -73,12 +100,12 @@ class HardwareScanner():
         while True:
             self.hardware["Chamber/Thermometer"]["sleep"] -= 1
             if self.hardware["Chamber/Thermometer"]["sleep"] < (-1 - self.thermo_retry):
-                logging.warning(f"Warning: Failed to read thermometer %s times in a row.", self.thermo_retry)
+                logger.warning(f"Warning: Failed to read thermometer %s times in a row.", self.thermo_retry)
                 self.hardware["Chamber/Thermometer"]["sleep"] = -1
             if self.hardware["Chamber/Thermometer"]["sleep"] < 0:
                 humidity, temperature = self.getChamberTemperature()
                 if humidity is not None and temperature is not None:
-                    logging.info(f"Hardware read: Chamber: Temperature: %.1f°C, Humidity: %.1f%%", temperature, humidity)
+                    logger.info(f"Hardware read: Chamber: Temperature: %.1f°C, Humidity: %.1f%%", temperature, humidity)
                     self.update( [("Beercadia/Chamber/Temperature", temperature), ("Beercadia/Chamber/Humidity", humidity)] )
                     self.hardware["Chamber/Thermometer"]["sleep"] = int( self.thermosleep / HardwareScanner.CORE_LOOP_SLEEP )
             
@@ -96,7 +123,7 @@ class HardwareScanner():
     def publish(self, items):
         for key, val in items:
             self.mosquitto_client.publish(key, val, retain=True)
-            logging.info(f"%s = %s", key, val)
+            logger.info(f"%s = %s", key, val)
         return
         
     def updateDB(self, items):
@@ -135,5 +162,11 @@ if __name__ == '__main__':
         format="%{asctime)s:%(levelname)s: %(message)s",
         datefmt="%Y/%m/%d %H:%M:%S",
         level=logging.INFO)
-    obj = HardwareScanner(thermosleep=60)
+    logger = logging.getLogger(__name__)
+    logHandler = logging.handlers.RotatingFileHandler(os.path.join(os.path.dirname(os.path.realpath(__file__)), "hardwarescan.log"), maxBytes=65536, backupCount=2)
+    logHandler.setLevel(logging.INFO)
+    logHandler.setFormatter(logging.Formatter(fmt="%(asctime)s %(levelname)s: %(message)s", datefmt="%Y/%m/%d %H:%M:%S"))
+    logger.addHandler(logHandler)
+    
+    obj = HardwareScanner(thermosleep=360)
     obj.scan()
