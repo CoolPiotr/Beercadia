@@ -36,6 +36,7 @@ class HardwareScanner():
         Gas/                            # Gas cannister info. Could be made into left/right if we put two on the machine.
             Weight/                     # Weight of the gas cannister, in kilograms.
     
+    Note that the Logging module can't use f-strings, so we have to use %s formatting instead.
     """
     DATABASE = "../Beercadia.db"
     MOSQUITTO_BROKER = "127.0.0.1"
@@ -49,12 +50,12 @@ class HardwareScanner():
     
     @staticmethod
     def mqtt_on_disconnect(client, userdata, returncode):
-        logging.warning(f"MQTT client disconnected [code {returncode}]; attempting to reconnect...")
+        logging.warning(f"MQTT client disconnected [code %s]; attempting to reconnect...", returncode)
         while client.disconnected:
             client.connect(HardwareScanner.MOSQUITTO_BROKER, HardwareScanner.MOSQUITTO_PORT)
     
     
-    def __init__(self, thermosleep=30, thermoretry=15, db=None):
+    def __init__(self, thermosleep=360, thermoretry=15, db=None):
         self.thermosleep = thermosleep
         self.thermo_retry = thermoretry
         self.db = db if db else HardwareScanner.DATABASE
@@ -72,12 +73,12 @@ class HardwareScanner():
         while True:
             self.hardware["Chamber/Thermometer"]["sleep"] -= 1
             if self.hardware["Chamber/Thermometer"]["sleep"] < (-1 - self.thermo_retry):
-                logging.warning(f"Warning: Failed to read thermometer {self.thermo_retry} times in a row.")
+                logging.warning(f"Warning: Failed to read thermometer %s times in a row.", self.thermo_retry)
                 self.hardware["Chamber/Thermometer"]["sleep"] = -1
             if self.hardware["Chamber/Thermometer"]["sleep"] < 0:
                 humidity, temperature = self.getChamberTemperature()
                 if humidity is not None and temperature is not None:
-                    logging.info(f"Chamber: Temperature: {temperature:0.1f}°C, Humidity: {humidity:0.1f}%")
+                    logging.info(f"Hardware read: Chamber: Temperature: %.1f°C, Humidity: %.1f%%", temperature, humidity)
                     self.update( [("Beercadia/Chamber/Temperature", temperature), ("Beercadia/Chamber/Humidity", humidity)] )
                     self.hardware["Chamber/Thermometer"]["sleep"] = int( self.thermosleep / HardwareScanner.CORE_LOOP_SLEEP )
             
@@ -95,7 +96,7 @@ class HardwareScanner():
     def publish(self, items):
         for key, val in items:
             self.mosquitto_client.publish(key, val, retain=True)
-            logging.info(f"{key} = {val}")
+            logging.info(f"%s = %s", key, val)
         return
         
     def updateDB(self, items):
@@ -125,14 +126,12 @@ class HardwareScanner():
         Returns humidity, temperature
         """
         return Adafruit_DHT.read(sensor, pin)
-        # return fake sample values until tested from Raspberry Pi
-        #return 0.65, 22.1 
 
 
 
 if __name__ == '__main__':
     logging.basicConfig(
-        filename="hardwarescan.log", encoding="utf-8",
+        filename="hardwarescan.log",
         format="%{asctime)s:%(levelname)s: %(message)s",
         datefmt="%Y/%m/%d %H:%M:%S",
         level=logging.INFO)
