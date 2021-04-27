@@ -113,6 +113,10 @@ class HardwareScanner():
             "Chamber/Thermometer": { "sleep": 0, "sensor": Adafruit_DHT.DHT22, "pin": 4 }
         }
     
+    def __str__(self):
+        txt = f"<HardwareScanner: thermometer-sleep={self.thermosleep}>"
+        return txt
+    
     def scan(self):
         while True:
             self.hardwareReadInLoop("Chamber/Thermometer")
@@ -215,5 +219,6 @@ if __name__ == '__main__':
     stdoutLogHandler.setFormatter(logging.Formatter(fmt="%(asctime)s %(levelname)s: %(message)s", datefmt="%Y/%m/%d %H:%M:%S"))
     logger.addHandler(stdoutLogHandler)
     
-    obj = HardwareScanner(thermosleep=60)
+    obj = HardwareScanner(thermosleep=360)
+    logger.info("Starting %s", str(obj))
     obj.scan()
