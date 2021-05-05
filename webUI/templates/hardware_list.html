@@ -15,7 +15,7 @@
 	{% for key, val in hardware.items() %}
 		<tr><td>{{key}}</td><td>{{val}}</td><td>
 		{%- if "Temperature" in key %}
-		{% with celcius = val, thermoscale = 48 %}{%- include 'svgthermometer.svg' %}{% endwith %}</td>
+		{% with celcius = val, thermoscale = 48 %}{%- include 'thermometer.svg' %}{% endwith %}</td>
 		{%- endif %}
 		</td></tr>
 	{% endfor %}

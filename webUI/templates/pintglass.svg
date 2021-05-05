@@ -1,0 +1,48 @@
+{#% set pintfill = 1.0 %#}
+
+{% if not maxheight %}
+	{% set maxheight = 0.91 %}
+{% endif %}
+{% set foamheight = 1.0 - maxheight %}
+{% if not beercolor %}
+	{#% set beercolor = "hsl(26,100%,23%)" %}{# dark brown ale #}
+	{% set beercolor = "hsl(47,98%,55%)" %}{# nice amber, same as Beercadia logo #}
+{% endif %}
+{% set foamcolor = "hsla(47,3%,92%,0.9)" %}
+
+<svg version="1.1" xmlns="http://www/w3/org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+ viewBox="0 0 512 828">{# golden ratio 1.618, slope = 812 ÷ 64 = 12.6875 #}
+<defs>
+	<g id="pintbeerpartial">
+		<path stroke="none" fill="{{beercolor}}" d="
+			M 72 820 L 440 820 L {{440+(pintfill*maxheight*64)}} {{820-(pintfill*maxheight*812)}} L {{72-(pintfill*maxheight*64)}} {{820-(pintfill*maxheight*812)}} Z 
+		"/>
+		<path stroke="none" fill="{{foamcolor}}" d="
+			M {{72-(pintfill*maxheight*64)}} {{820-(pintfill*maxheight*812)}}
+			L {{440+(pintfill*maxheight*64)}} {{820-(pintfill*maxheight*812)}}
+			L {{440+((pintfill*maxheight+0.09)*64)}} {{820-((pintfill*maxheight+0.09)*812)}}
+			L {{72-((pintfill*maxheight+0.09)*64)}} {{820-((pintfill*maxheight+0.09)*812)}}
+			Z
+		"/>
+	</g>
+	<g id="pintbeer">
+		<path stroke="none" fill="{{beercolor}}" d="
+			M 72 820 L 440 820 L {{440+(maxheight*64)}} {{820-(maxheight*812)}} L {{72-(maxheight*64)}} {{820-(maxheight*812)}} Z"/>
+		<path stroke="none" fill="{{foamcolor}}" d="
+			M {{72-(maxheight*64)}} {{820-(maxheight*812)}}
+			L {{440+(maxheight*64)}} {{820-(maxheight*812)}}
+			L {{440+((maxheight+0.09)*64)}} {{820-((maxheight+0.09)*812)}}
+			L {{72-((maxheight+0.09)*64)}} {{820-((maxheight+0.09)*812)}}
+			Z
+		"/>
+	</g>
+	<g id="pintglass">
+		<path stroke="white" stroke-width="32" stroke-linecap="round" fill="none" d="
+			M 376 756 L 384 654.5 M 392 553 L 424 147
+		"/>
+		<path stroke="white" stroke-width="16" stroke-linecap="round" fill="none" d="
+			M 8 8 L 504 8 L 440 820 L 72 820 z
+		"/>
+	</g>
+</defs>
+</svg>

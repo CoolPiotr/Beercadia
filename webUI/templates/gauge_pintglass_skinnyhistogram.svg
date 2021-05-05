@@ -1,0 +1,20 @@
+{#% set gaugescale = 512 %#}
+{#% set pints = 32 %#}
+
+{% set pintmax = 40 %}
+{% set fraction = (pints % 1) %}
+<svg version="1.1" xmlns="http://www/w3/org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+	width="{{gaugescale/2.6}}" height="{{gaugescale}}" viewBox="0 0 640 1664">
+{% with pintwidth = 1024, pintfill = fraction %}{%- include 'pintglass.svg' %}{% endwith %}
+{% for row in range(int(pintmax / 5)) %}
+	{% for col in range(5) %}
+		{% set c = row*5+col %}
+		{% if c == int(pintmax-pints) and c != pintmax-pints %}
+			<use xlink:href="#pintbeerpartial" transform="translate({{128*col}} {{208*row}}) scale(0.24,0.24)"/>
+		{% elif c >= (pintmax-pints) %}
+			<use xlink:href="#pintbeer" transform="translate({{128*col}} {{208*row}}) scale(0.24,0.24)"/>
+		{% endif %}
+		<use xlink:href="#pintglass" transform="translate({{128*col}} {{208*row}}) scale(0.24,0.24)"/>
+	{% endfor %}
+{% endfor %}
+</svg>

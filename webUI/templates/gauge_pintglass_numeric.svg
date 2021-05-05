@@ -1,0 +1,19 @@
+{#% set gaugescale = 512 %#}
+{#% set pintmax = 40 %#}
+{#% set pints = 32 %#}
+
+{% if not pintmax %}
+	{% set pintmax = 40 %}
+{% endif %}
+<svg version="1.1" xmlns="http://www/w3/org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+	width="{{gaugescale}}" height="{{gaugescale}}" viewBox="0 0 1024 1024">
+{% with pintfill = pints/pintmax %}{%- include 'pintglass.svg' %}{% endwith %}
+{% set sc = 1024/828 %}{# our viewbox divided by the height of the pintglass.svg viewbox #}
+<use xlink:href="#pintbeerpartial" transform="translate(0) scale({{sc}})"/>
+<use xlink:href="#pintglass" transform="translate(0) scale({{sc}})"/>
+<circle cx="512" cy="512" r="288" fill="hsla(0,100%,100%,0.6)"/>
+<text x="512" y="{{512+32}}" text-anchor="middle" dominant-baseline="middle" font-family="'Helvetica','Arial',sans-serif" font-weight="bold" font-size="384px" fill="black"
+>{{floor(pints)}}</text>
+<text x="512" y="{{512+212}}" text-anchor="middle" dominant-baseline="middle" font-family="'Helvetica','Arial',sans-serif" font-weight="bold" font-size="64px" fill="black"
+>PINTS</text>
+</svg>
