@@ -10,7 +10,7 @@ def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
-            SECRET_KEY="dev: not so seecret key",
+            SECRET_KEY="dev: not so secret key",
             APP_PROJECT_FOLDER="Beercadia"
     )
     
