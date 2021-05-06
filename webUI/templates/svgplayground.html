@@ -8,6 +8,13 @@ body {
 }
 .thermo {
 }
+@font-face {
+	font-family: "ArcadeClassic";
+	font-style: normal;
+	font-weight: normal;
+	src: local("ArcadeClassic"), url("/static/ARCADECLASSIC.woff") format("woff");
+}
+h1 { font-family: "ArcadeClassic"; font-size: 128px; margin:0; padding:0; line-height: 128px; }
 </style>
 {% set celcius = 12 %}
 {% set temparc = 180 - celcius * 10 %}
@@ -50,22 +57,14 @@ body {
 -->
 <!-- A radiusX, radiusY, rotation of ellipse (always 0 for circle), large arc flag (0 for short distance, 1 for long one), sweep flag (0 counterclockwise, 1 clockwise) -->
 <div>
-<svg width="128" height="128" viewBox="0 0 128 128">
-<defs>
-	<linearGradient id="beer" gradientTransform="rotate(102)">
-		<stop offset="9%" stop-color=hsl(250,3%,92%) />
-		<stop offset="20%" stop-color=hsl(47,98%,55%) />
-	</linearGradient>
-</defs>
-<g transform="rotate(-12)">
-<path stroke="black" stroke-width="2px" fill="url('#beer')" d="
-M 32 32 h 16 v 16 h 24 v -16 h 16 v 8 h -8 v 8 h 8 v 8 h 8 v 8 h 8 v 16 h -8 v -8 h -8 v 16 h -8 v 8 h -16 v -8 h 8 v -8 h -24 v 8 h 8 v 8
- h -16 v -8 h -8 v -16 h -8 v 8 h -8 v -16 h 8 v -8 h 8 v -8 h 8 v -8 h -8 z 
-M 40 56 v 8 h 8 v -8 z M 72 56 v 8 h 8 v -8 z
-"/>
-</g>
+<h1>
+<svg version="1.1" xmlns="http://www/w3/org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+	width="128" height="128" viewBox="0 0 128 128">
+{%- include 'beercadia_logo.svg' %}
+	<use xlink:href="#beercadia_logo"/>
 </svg>
-<img src="{{ url_for('static', filename='Beercadia_title.svg') }}" height="128"/>
+<!--img src="{{ url_for('static', filename='Beercadia_title.svg') }}" height="128"/-->
+Beercadia</h1>
 </div>
 
 {% with pints=30, gaugescale=256 %}{%- include 'gauge_pintglass_skinnyhistogram.svg' %}{% endwith %}
@@ -154,6 +153,6 @@ M 376 756 L 384 654.5 M 392 553 L 424 147
 <text x="512" y="{{512+32}}" text-anchor="middle" dominant-baseline="middle" font-family="'Helvetica','Arial',sans-serif" font-weight="bold" font-size="384px" fill="black"
 >{{floor(celcius)}}{% if int(celcius*2) % 2 == 1 %}<tspan font-size="128px" dy="-108px">5</tspan>{% endif %}</text>
 <text x="512" y="928" text-anchor="middle" dominant-baseline="middle" font-family="'Helvetica','Arial',sans-serif" font-weight="bold" font-size="128px" fill="black"
->C</text>
+>°C&nbsp;&nbsp;</text>
 </svg> 
 {% endblock %}
