@@ -8,6 +8,11 @@ import traceback
 
 blueprint = Blueprint("error", __name__)
 
+@blueprint.app_errorhandler(404)
+def handle_not_found_webpage(error):
+    return render_template("404notfound.html", error=error, estring=str(error), traceback=htmlFormatTraceback(traceback.format_exc()))
+
+
 @blueprint.app_errorhandler(500)
 def handle_server_error_webpage(error):
     return render_template("error.html", error=error, estring=str(error), traceback=htmlFormatTraceback(traceback.format_exc()))

@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>{% block title %}{% endblock %}</title>
+	<link rel="stylesheet" href="{{ url_for('static', filename='404.css') }}" />
+</head>
+<body>
+<header>
+{% block header %}
+	<h1>404 Not Found</h1>
+	<h4>It seems that page doesn't exist.<h4>
+{% endblock %}
+</header>
+<p><p>
+<section class="content">
+{% block content %}
+{% endblock %}
+</section>
+</body>
