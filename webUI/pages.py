@@ -18,8 +18,12 @@ def utility_processor():
 
 @bp.route("/", methods=["GET"])
 def mainpage():
-    return render_template("svgplayground.html")
+    return render_template("main.html")
 
 @bp.route("/hardware", methods=["GET"])
 def hardwaredata():
     return render_template("hardware_list.html", hardware=hardware_data())
+
+@bp.route("/playground", methods=["GET"])
+def playground():
+    return render_template("svgplayground.html")

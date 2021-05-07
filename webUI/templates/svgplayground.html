@@ -12,9 +12,9 @@ body {
 	font-family: "ArcadeClassic";
 	font-style: normal;
 	font-weight: normal;
-	src: local("ArcadeClassic"), url("/static/ARCADECLASSIC.woff") format("woff");
+	src: local("ArcadeClassic"), url("{{ url_for('static', filename='ARCADECLASSIC.woff') }}") format("woff");
 }
-h1 { font-family: "ArcadeClassic"; font-size: 128px; margin:0; padding:0; line-height: 128px; }
+h1 { font-family: "ArcadeClassic"; font-size: 128px; margin:0; padding:0; line-height: 128px; letter-spacing: 0.05em; }
 </style>
 {% set celcius = 12 %}
 {% set temparc = 180 - celcius * 10 %}
@@ -58,16 +58,15 @@ h1 { font-family: "ArcadeClassic"; font-size: 128px; margin:0; padding:0; line-h
 <!-- A radiusX, radiusY, rotation of ellipse (always 0 for circle), large arc flag (0 for short distance, 1 for long one), sweep flag (0 counterclockwise, 1 clockwise) -->
 <div>
 <h1>
-<svg version="1.1" xmlns="http://www/w3/org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-	width="128" height="128" viewBox="0 0 128 128">
+<svg class="logo" version="1.1" xmlns="http://www/w3/org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+	width="128" height="96" viewBox="0 0 128 96">
 {%- include 'beercadia_logo.svg' %}
-	<use xlink:href="#beercadia_logo"/>
+	<use xlink:href="#beercadia_logo" transform="translate(-16 -8) scale(1.2)"/>
 </svg>
-<!--img src="{{ url_for('static', filename='Beercadia_title.svg') }}" height="128"/-->
 Beercadia</h1>
 </div>
 
-{% with pints=30, gaugescale=256 %}{%- include 'gauge_pintglass_skinnyhistogram.svg' %}{% endwith %}
+{% with pints=18, gaugescale=256 %}{%- include 'gauge_pintglass_skinnyhistogram.svg' %}{% endwith %}
 
 <!--
 <div>

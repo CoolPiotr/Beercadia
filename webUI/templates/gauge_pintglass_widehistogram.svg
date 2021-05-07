@@ -1,10 +1,9 @@
-{#% set gaugescale = 512 %#}
 {#% set pints = 32 %#}
 
 {% set pintmax = 120 %}
 {% set fraction = (pints % 1) %}
 <svg version="1.1" xmlns="http://www/w3/org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-	width="{{gaugescale*1.16}}" height="{{gaugescale}}" viewBox="0 0 1920 1664">
+	viewBox="0 0 1920 1664">
 {% with pintwidth = 1024, pintfill = fraction %}{%- include 'pintglass.svg' %}{% endwith %}
 {% for row in range(int(pintmax / 15)) %}
 	{% for col in range(15) %}

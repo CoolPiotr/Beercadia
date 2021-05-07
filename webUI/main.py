@@ -49,5 +49,5 @@ if __name__ == '__main__':
         # this won't run even from console if run from PythonAnywhere console (named 'liveconsole'),
         # so this script can be used to just activate DB in previous line.
         app = create_app()
-        app.run()
+        app.run(port=80)
         
