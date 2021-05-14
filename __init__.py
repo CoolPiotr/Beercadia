@@ -7,6 +7,7 @@ sudo apt install mosquitto -y
 sudo systemctl enable mosquitto
 sudo apt install sqlite3
 sudo apt install python3-pip
+sudo apt install python3-venv        (if doing Python builds from Pi)
 
 Required Python modules
 =======================
