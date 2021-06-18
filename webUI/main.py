@@ -49,5 +49,8 @@ if __name__ == '__main__':
         # this won't run even from console if run from PythonAnywhere console (named 'liveconsole'),
         # so this script can be used to just activate DB in previous line.
         app = create_app()
-        app.run(port=80)
+        # Adding 0.0.0.0 allows it to be connected to from any IP; otherwise it's only available from localhost/127.0.0.1
+        # This should only be used temporarily for testing layout on other devices; it's a security hole in the default test server.
+        # It defaults to port=5000, so you have to specify 80 if you want it to just work as a web page.
+        app.run(host="0.0.0.0", port=80)
         
